@@ -1,11 +1,11 @@
 *______________________________________________________________________
 *Data Management in Stata
 *Kate Cruz, Fall 2017
-*Problem Set 5 due: November 28 
+*Problem Set 6 due
 *Stata Version 15/IC 
 
 
-/* For Problem Set 5 I began to work on my final project by organizing and simpliying my exisiting work. 
+/* For Problem Set 6 I began to work on my final project by organizing and simpliying my exisiting work. 
 I also began to see a clearer picture about the impact of environment (food access, poverty) on health in NJ emerge through descriptive statistics. 
 ______________________________________________________________________
 
