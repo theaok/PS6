@@ -43,11 +43,19 @@ local worDir "/tmp/"
 capture mkdir ps6
 cd ps6
 
-//-----------------------------------------------------------------------------
+//PART 0: defining programs
 
-//PART 1: NJ County Health Rankings Data 
+/*
+i'd present your ado programs in class presentation-they're useful
 
-//Programming a Global Macro for Uploading Data
+also you may want to give them better names; shorter is better, so instead of kate, can say k or klc
+less typing and cleaner
+
+and give descriptive names: while kateGoogle is great, kate1 is not very meaningful
+
+*/
+
+//Programming an ado for downloading data
 cap program drop kateGoogle
 program define kateGoogle
 global gooPre 
@@ -56,17 +64,16 @@ local goohealth= "https://docs.google.com/uc?id=" + "`1'" + "&export=download"
 import excel "`goohealth'" ,clear 
 end
 
-kateGoogle "0B1opnkI-LLCiZFZKbzhlOFN4Sm8"
-
-//Drop 
-drop D H L P W AA AE AR BF BK CA CF CK CL CT DC DM DC EG EM ER E I M Q S X AB AK AL AF AX AQ AW BF BG BK BL CA CB CF CG CK CM CT CU DC DD DM DN DX DY EG EH EM EN ER ES Y AU AY BH CZ EO AZ-BB BV BW BX CE-CH CJ EA EB EJ-EL EP EQ ET
-drop in 1/2
-
-//Rename 
-rename (A-AO) (County deaths yearslost zyearslost perfairpoorhealth zfairpoor puhdays zpuhdays muhdays zmuhdays lowbirth livebirth perlowbirth persmoke zsmoke perobese zobese foodindex zfood perinactive zinactive perwaccess zwaccess)
-rename (AP-BZ) (perdrink zdrink aldrivedeath peraldrivedeath teenbirth teenpop teenbirthrate uninsured peruninsured zuninsured PCP PCPrate zPCP dentist dentistrate zdentist MHproviders MHPrate medicaidenrolled prevhosprate)
-rename (CC-DG) (zprevhosprate diabetics zmedicareenrolled cohortsize gradrate zgradrate somecollege population persomecollege zsomecollege unemployed laborforce perunemployed childpov perchildpov zchildpov eightyincome twentyincome)
-rename (DH-EI) (incomeratio zincome singleparent households persingleparent zhouseholds associations associationrate zassociations violentcrimerate zviolentcrime violentcrime injurydeath injurydeathrate zinjurydeath violation zviolation severeproblems persevereproblems zsevereproblems)  
+//Programming an ado for downloading with First Row Clear //fits better here than later
+//this way you can clearly compare with first regular ado and also more easily modify the two if needed
+//and also they fit logically better together in one place
+cap program drop kateGoogleFR
+program define kateGoogleFR 
+global gooPre 
+global gooSuf 
+local goohealth= "https://docs.google.com/uc?id=" + "`1'" + "&export=download"
+import excel "`goohealth'" , firstrow clear 
+end
 
 //Recode & Create Program //Separated each county into region and created a program to use throughout datasets 
 cap program drop kate1
@@ -79,6 +86,34 @@ replace region=1 if County=="Burlington" | County=="Camden" | County=="Glouceste
 replace region=2 if County=="Hunterdon" | County=="Somerset" | County=="Middlesex" | County=="Monmouth" | County=="Ocean" | County=="Mercer" 
 recode region (0/1=0 Non-Central) (1.1/2=1 Central), gen(region_2) //this allowed me to create a new level of comaprison looking at Central NJ in particular 
 end
+
+//scanning through your dofile reveals that you repeat over and over again our county names, so just make a macro
+//can even have a global macro; because counties are sometimes multiple words have each in quotes
+//but then also need the whole thing in quotes so using here super fancy stata compound quotes! `"  "'
+
+global NJ `" "Atlantic" "Bergen" "Burlington" "Camden" "Cape May" "Cumberland" "Essex" "Gloucester" "Hudson" "Hunterdon" "Mercer" "Middlesex" "Monmouth" "Morris" "Ocean" "Passaic" "Salem" "Somerset" "Sussex" "Union" "Warren" "'
+
+di `"$NJ"'
+
+//-----------------------------------------------------------------------------
+
+//PART 1: NJ County Health Rankings Data 
+
+
+
+kateGoogle "0B1opnkI-LLCiZFZKbzhlOFN4Sm8" //cool this saves quite a bit of typing and also cleaner now
+
+//Drop 
+drop D H L P W AA AE AR BF BK CA CF CK CL CT DC DM DC EG EM ER E I M Q S X AB AK AL AF AX AQ AW BF BG BK BL CA CB CF CG CK CM CT CU DC DD DM DN DX DY EG EH EM EN ER ES Y AU AY BH CZ EO AZ-BB BV BW BX CE-CH CJ EA EB EJ-EL EP EQ ET
+drop in 1/2
+
+//Rename 
+rename (A-AO) (County deaths yearslost zyearslost perfairpoorhealth zfairpoor puhdays zpuhdays muhdays zmuhdays lowbirth livebirth perlowbirth persmoke zsmoke perobese zobese foodindex zfood perinactive zinactive perwaccess zwaccess)
+rename (AP-BZ) (perdrink zdrink aldrivedeath peraldrivedeath teenbirth teenpop teenbirthrate uninsured peruninsured zuninsured PCP PCPrate zPCP dentist dentistrate zdentist MHproviders MHPrate medicaidenrolled prevhosprate)
+rename (CC-DG) (zprevhosprate diabetics zmedicareenrolled cohortsize gradrate zgradrate somecollege population persomecollege zsomecollege unemployed laborforce perunemployed childpov perchildpov zchildpov eightyincome twentyincome)
+rename (DH-EI) (incomeratio zincome singleparent households persingleparent zhouseholds associations associationrate zassociations violentcrimerate zviolentcrime violentcrime injurydeath injurydeathrate zinjurydeath violation zviolation severeproblems persevereproblems zsevereproblems)  
+
+
 kate1 
 drop in 22/23 
 
@@ -130,9 +165,18 @@ rename (AJ-LD) (singlemom nonfamily pernonfamily livealone children perchildren 
 rename (LF-RN) (persamehouse englishonly perenglishonly notenglish pernotenglish spanish perspanish api perapi otherlang perotherlang) 
 
 //Replace 
+/*
 foreach c in "Atlantic" "Bergen" "Burlington" "Camden" "Cape May" "Cumberland" "Essex" "Gloucester" "Hudson" "Hunterdon" "Mercer" "Middlesex" "Monmouth" "Morris" "Ocean" "Passaic" "Salem" "Somerset" "Sussex" "Union" "Warren" {
 replace County = "`c'"  if County == "`c' County, New Jersey"
 }
+*/
+//so would have instead (and also for all the other ones)
+foreach c in $NJ {
+replace County = "`c'"  if County == "`c' County, New Jersey"
+}
+
+
+
 //Drop
 drop in 1/4
 
@@ -164,14 +208,7 @@ save toxic, replace
 //------------------------------------------------------------------------------
  
 //PART 5: EPA Outdoor Air Quality Report
-//Programming a Global Macro for Uploading Data with First Row Clear 
-cap program drop kateGoogleFR
-program define kateGoogleFR 
-global gooPre 
-global gooSuf 
-local goohealth= "https://docs.google.com/uc?id=" + "`1'" + "&export=download"
-import excel "`goohealth'" , firstrow clear 
-end
+
 
 kateGoogleFR "0B1opnkI-LLCic1lHUUxUZHhvZGs"
 
@@ -243,9 +280,13 @@ save census2010, replace
 							  
 							  
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/ 
+//again, amy want to give meaningful names, so instead of kate_ps6, maybe just name with dataset names 
+// so like behealth, toxic etc
+
 use health
 merge 1:1 County using behealth
-save kate_ps6, replace 
+save kate_ps6, replace //saving each time as kate_ps6 doesnt make sense--either save as sth differnt
+//or dont save each time and only save at the very end of merging
 
 use kate_ps6
 drop _merge 
@@ -263,7 +304,7 @@ merge 1:1 County using EPAair
 drop in 6 
 //the merge creates a new County observation that throws off the data so I deleted it 
 save kate_ps6, replace 
-//note: EPA air quality data is only for 17 counties, therefore 5 do not match 
+//note: EPA air quality data is only for 17 counties, therefore 5 do not match //great to note that!!
 
 use kate_ps6
 drop _merge 
@@ -469,6 +510,10 @@ corr perlowbirth PercentwithSNAP
 For each increase in the percent of SNAP usage there is a .7% increase in low
 birth rates.*/ 
 
+//right, so i'd put these results into a paper, read some literature, expand your analysis
+//based on the literature and try to publish it; btw lew, aditi, straso have similar interests
+//mine are not that different too, also have a paper using very same data on mental health
+//https://link.springer.com/article/10.1007/s11482-014-9319-1
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
